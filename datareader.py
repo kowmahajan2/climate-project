@@ -8,6 +8,34 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import glob
 
+"""# Open file.
+FILE_NAME = "AIRS.2016.06.10.232.L2.SUBS2RET.v7.0.1.0.G20089173054.hdf"
+hdf = SD(FILE_NAME, SDC.READ)
+
+# List available SDS datasets.
+print(hdf.datasets())
+
+# Read dataset.
+DATAFIELD_NAME='TSurfAir'
+data3D = hdf.select(DATAFIELD_NAME)
+data = data3D[:,:]
+
+# Read geolocation dataset.
+lat = hdf.select('Latitude')
+latitude = lat[:,:]
+lon = hdf.select('Longitude')
+longitude = lon[:,:]
+
+ax = mlp.axes(projection = ccrs.PlateCarree())
+
+mlp.contourf(longitude, latitude, data, 50, transform = ccrs.PlateCarree(), cmap = "jet")
+
+ax.coastlines(resolution= "50m")
+
+mlp.savefig("surfTemp")
+mlp.show()"""
+
+
 levels = np.linspace(223, 323, 100)
 date = input('enter date YYYY.MM.DD: ')
 DATAFIELD_NAME = input('enter data field: ')
@@ -17,10 +45,10 @@ File_Name = AIRS_date + ".*"
 
 i = 1
 
-"""longitude = np.linspace(-180, 180, 360)
+longitude = np.linspace(-180, 180, 360)
 latitude = np.linspace(-90, 90, 180)
 
-flat = np.zeros((180, 360))"""
+flat = np.zeros((180, 360))
 
 ax = mlp.axes(projection = ccrs.PlateCarree())
 ax.coastlines(resolution= "50m")
