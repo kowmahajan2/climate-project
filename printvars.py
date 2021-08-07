@@ -7,3 +7,5 @@ hdf = SD(FILE_NAME, SDC.READ)
 
 # List available SDS datasets.
 print(hdf.datasets())
+time = hdf.select("Time")
+print(time[0,0])
