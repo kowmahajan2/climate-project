@@ -352,14 +352,14 @@ def DayAvgVar(time_series, var_time_series):
     return days, avg_var
 
 
-def AnoSinglePlotter(DATAFIELD_NAME, tarlat, tarlon, taryear):
+def AnoSinglePlotter(DATAFIELD_NAME, tarlat, tarlon, taryear, levels = 0):
     aggr_var_series = []
     days = np.linspace(1, 91, 91)
 
     for year in range(2003,2022):
         print(year)
         blockPrint()
-        year_data = SinglePlotter(DATAFIELD_NAME, tarlat, tarlon, year)
+        year_data = SinglePlotter(DATAFIELD_NAME, tarlat, tarlon, year, levels)
         enablePrint()
         print(np.shape(year_data[1]))
         #print(year_data[0]/86400)
@@ -374,6 +374,7 @@ def AnoSinglePlotter(DATAFIELD_NAME, tarlat, tarlon, taryear):
     avg_var_series = np.nanmean(aggr_var_series, axis = 0)
     print("final shape" + str(len(np.shape(avg_var_series))))
     if len(np.shape(avg_var_series)) == 1:
+        #condition for plotting single level stuff
         if int(taryear) == 0:
             for iter_year in range(2003, 2022):
                 plt.plot(days, aggr_var_series[int(iter_year) - 2003] - avg_var_series, label =   str(DATAFIELD_NAME) +" anomalies at " + str(tarlat) + " " + str(tarlon)+ "in" + str(iter_year))
@@ -389,10 +390,12 @@ def AnoSinglePlotter(DATAFIELD_NAME, tarlat, tarlon, taryear):
             plt.grid()
             plt.savefig("images/" + str(DATAFIELD_NAME)+"anom" + str(tarlat) + "." + str(tarlon) +  "." + str(taryear) + ".png")
     else:
+        #condtion for plotting on altitude, currently only plotting on H2O pressure levels, so will not work for air temperature
         print("plotting")
         if int(taryear) == 0:
             for iter_year in range(2003, 2022):
                 print(iter_year)
+                #a condition here, to program for pressure levels other than H2O can quickly remedy this
                 pressures = np.array([1100, 1000, 925, 850, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50])
                 xcords = []
                 ycords = []
@@ -414,14 +417,223 @@ def AnoSinglePlotter(DATAFIELD_NAME, tarlat, tarlon, taryear):
                 plt.savefig("images/" + str(DATAFIELD_NAME)+"anom" + str(tarlat) + "." + str(tarlon) +  "." + str(iter_year) + ".png")
                 plt.clf()
         else:
+            #plotting a single level, probably not required, could be reduced by adding a second condition in the single level plotter
             plt.plot(days, aggr_var_series[int(taryear) - 2003] - avg_var_series, label =   str(DATAFIELD_NAME) +" anomalies at " + str(tarlat) + " " + str(tarlon)+ "in" + str(taryear))
             plt.legend()
             plt.title(str(DATAFIELD_NAME) + " anomalies plot")
             plt.grid()
-            plt.savefig("images/" + str(DATAFIELD_NAME)+"anom" + str(tarlat) + "." + str(tarlon) +  "." + str(taryear) + ".png")
+            plt.savefig("images/" + str(DATAFIELD_NAME)+"anom" + str(tarlat) + "." + str(tarlon) +  "." + str(taryear) + str(levels) + ".png")
 
 
+def AnoMultiPlotter(DATAFIELD_NAMES, tarlat, tarlon, taryear, levels = 0):
     
+    aggr_var_series1 = []
+    days = np.linspace(1, 91, 91)
+
+    for year in range(2003,2022):
+        print(year)
+        blockPrint()
+        year_data = SinglePlotter(DATAFIELD_NAMES[0], tarlat, tarlon, year, levels)
+        enablePrint()
+        print(np.shape(year_data[1]))
+        #print(year_data[0]/86400)
+        #print(year_data[1])
+        day_avg_var = DayAvgVar(year_data[0], year_data[1])
+        #print(day_avg_var)
+        aggr_var_series1.append(day_avg_var[1])
+        print(np.shape(day_avg_var[1]))
+    print(len(aggr_var_series1))
+    aggr_var_series1 = np.array(aggr_var_series1)
+    
+    avg_var_series1 = np.nanmean(aggr_var_series1, axis = 0)
+    print("final shape" + str(len(np.shape(avg_var_series1))))
+
+    aggr_var_series2 = []
+    for year in range(2003,2022):
+        print(year)
+        blockPrint()
+        year_data = SinglePlotter(DATAFIELD_NAMES[1], tarlat, tarlon, year, levels)
+        enablePrint()
+        print(np.shape(year_data[1]))
+        #print(year_data[0]/86400)
+        #print(year_data[1])
+        day_avg_var = DayAvgVar(year_data[0], year_data[1])
+        #print(day_avg_var)
+        aggr_var_series2.append(day_avg_var[1])
+        print(np.shape(day_avg_var[1]))
+    print(len(aggr_var_series2))
+    aggr_var_series2 = np.array(aggr_var_series2)
+    
+    avg_var_series2 = np.nanmean(aggr_var_series2, axis = 0)
+
+    if int(taryear) == 0:
+        for iter_year in range(2003, 2022):
+            fig, ax = plt.subplots(figsize = (10,10))
+            twin = ax.twinx()
+            if len(np.shape(avg_var_series1)) == 1:
+                ax.plot(days, aggr_var_series1[int(iter_year) - 2003] - avg_var_series1, label =   str(DATAFIELD_NAMES[0]) +" anomalies at " + str(tarlat) + " " + str(tarlon)+ "in" + str(iter_year))
+                ax.legend()
+                ax.grid()
+            else:
+                #a condition here, to program for pressure levels other than H2O can quickly remedy this
+                pressures = np.array([1100, 1000, 925, 850, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50])
+                xcords = []
+                ycords = []
+                magni = []
+                for i in range(0, len(aggr_var_series1[0])):
+                    for j in range(0, len(aggr_var_series1[0,0])):
+                        if aggr_var_series1[iter_year - 2003,i,j] != -9999 and avg_var_series1[i,j] >= 0:
+                            xcords.append(days[i])
+                            ycords.append(pressures[j])
+                            magni.append(aggr_var_series1[iter_year - 2003,i,j] - avg_var_series1[i,j])
+                im = ax.scatter(xcords, ycords, c = magni, s = 10, cmap = "jet", label = str(DATAFIELD_NAMES[0])+" anomaly at" + str(tarlat) + "." + str(tarlon) +  " in " + str(iter_year))
+                #print(magni)
+
+                #ax.ylim(bottom = 0, top = np.max(var_time_series))
+                fig.colorbar(im, ax = ax, orientation="horizontal")
+                #ax.title(str(DATAFIELD_NAMES[0]) + "plot")
+                ax.grid()
+
+            if len(np.shape(avg_var_series2)) == 1:
+                twin.plot(days, aggr_var_series2[int(iter_year) - 2003] - avg_var_series2, label =   str(DATAFIELD_NAMES[1]) +" anomalies at " + str(tarlat) + " " + str(tarlon)+ "in" + str(iter_year))
+                twin.legend()
+                twin.grid()
+                plt.savefig("images/" + str(DATAFIELD_NAMES[1])+"anom" + str(tarlat) + "." + str(tarlon) +  "." + str(iter_year) + ".png")
+                
+                plt.clf()
+            else:
+                print(iter_year)
+                #a condition here, to program for pressure levels other than H2O can quickly remedy this
+                pressures = np.array([1100, 1000, 925, 850, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50])
+                xcords = []
+                ycords = []
+                magni = []
+                for i in range(0, len(aggr_var_series2[0])):
+                    for j in range(0, len(aggr_var_series2[0,0])):
+                        if aggr_var_series2[iter_year - 2003,i,j] != -9999 and avg_var_series2[i,j] >= 0:
+                            xcords.append(days[i])
+                            ycords.append(pressures[j])
+                            magni.append(aggr_var_series2[iter_year - 2003,i,j] - avg_var_series2[i,j])
+                im = twin.scatter(xcords, ycords, c = magni, s = 10, cmap = "jet", label = str(DATAFIELD_NAMES[1])+" anomaly at" + str(tarlat) + "." + str(tarlon) +  " in " + str(iter_year))
+                #print(magni)
+
+                #twin.ylim(bottom = 0, top = np.mtwin(var_time_series))
+                fig.colorbar(im, ax = twin, orientation="horizontal")
+                #twin.title(str(DATAFIELD_NAMES[0]) + "plot")
+                twin.grid()
+                twin.legend()
+                plt.savefig("images/" + str(DATAFIELD_NAMES[1])+"anom" + str(tarlat) + "." + str(tarlon) +  "." + str(iter_year) + ".png")
+                plt.clf()
+            fig.clf()
+            plt.close()
+
+
+    """if len(np.shape(avg_var_series1)) == 1:
+        #condition for plotting single level stuff
+        if int(taryear) == 0:
+            for iter_year in range(2003, 2022):
+                ax.plot(days, aggr_var_series1[int(iter_year) - 2003] - avg_var_series1, label =   str(DATAFIELD_NAMES[0]) +" anomalies at " + str(tarlat) + " " + str(tarlon)+ "in" + str(iter_year))
+                ax.legend()
+                ax.grid()
+                #plt.savefig("images/" + str(DATAFIELD_NAMES[0])+"anom" + str(tarlat) + "." + str(tarlon) +  "." + str(iter_year) + ".png")
+                
+                #plt.clf()
+        else:
+            ax.plot(days, aggr_var_series1[int(taryear) - 2003] - avg_var_series1, label =   str(DATAFIELD_NAMES[0]) +" anomalies at " + str(tarlat) + " " + str(tarlon)+ "in" + str(taryear))
+            ax.legend()
+            #ax.title(str(DATAFIELD_NAMES[0]) + " anomalies plot")
+            ax.grid()
+            #plt.savefig("images/" + str(DATAFIELD_NAMES[0])+"anom" + str(tarlat) + "." + str(tarlon) +  "." + str(taryear) + ".png")
+    else:
+        #condtion for plotting on altitude, currently only plotting on H2O pressure levels, so will not work for air temperature
+        print("plotting")
+        if int(taryear) == 0:
+            for iter_year in range(2003, 2022):
+                print(iter_year)
+                #a condition here, to program for pressure levels other than H2O can quickly remedy this
+                pressures = np.array([1100, 1000, 925, 850, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50])
+                xcords = []
+                ycords = []
+                magni = []
+                for i in range(0, len(aggr_var_series1[0])):
+                    for j in range(0, len(aggr_var_series1[0,0])):
+                        if aggr_var_series1[iter_year - 2003,i,j] != -9999 and avg_var_series1[i,j] >= 0:
+                            xcords.append(days[i])
+                            ycords.append(pressures[j])
+                            magni.append(aggr_var_series1[iter_year - 2003,i,j] - avg_var_series1[i,j])
+                im = ax.scatter(xcords, ycords, c = magni, s = 10, cmap = "jet", label = str(DATAFIELD_NAMES[0])+" anomaly at" + str(tarlat) + "." + str(tarlon) +  " in " + str(iter_year))
+                #print(magni)
+
+                #ax.ylim(bottom = 0, top = np.max(var_time_series))
+                fig.colorbar(im, ax = ax)
+                #ax.title(str(DATAFIELD_NAMES[0]) + "plot")
+                ax.grid()
+                #ax1.legend()
+                #plt.savefig("images/" + str(DATAFIELD_NAMES[0])+"anom" + str(tarlat) + "." + str(tarlon) +  "." + str(iter_year) + ".png")
+                
+        else:
+            #plotting a single level, probably not required, could be reduced by adding a second condition in the single level plotter
+            ax.plot(days, aggr_var_series1[int(taryear) - 2003] - avg_var_series1, label =   str(DATAFIELD_NAMES[0]) +" anomalies at " + str(tarlat) + " " + str(tarlon)+ "in" + str(taryear))
+            ax.legend()
+            #ax.title(str(DATAFIELD_NAMES[0]) + " anomalies plot")
+            ax.grid()
+            #plt.savefig("images/" + str(DATAFIELD_NAMES[0])+"anom" + str(tarlat) + "." + str(tarlon) +  "." + str(taryear) + str(levels) + ".png")
+
+
+    if len(np.shape(avg_var_series2)) == 1:
+        #condition for plotting single level stuff
+        if int(taryear) == 0:
+            for iter_year in range(2003, 2022):
+                twin.plot(days, aggr_var_series2[int(iter_year) - 2003] - avg_var_series2, label =   str(DATAFIELD_NAMES[1]) +" anomalies at " + str(tarlat) + " " + str(tarlon)+ "in" + str(iter_year))
+                twin.legend()
+                twin.grid()
+                plt.savefig("images/" + str(DATAFIELD_NAMES[1])+"anom" + str(tarlat) + "." + str(tarlon) +  "." + str(iter_year) + ".png")
+                
+                plt.clf()
+        else:
+            twin.plot(days, aggr_var_series2[int(taryear) - 2003] - avg_var_series2, label =   str(DATAFIELD_NAMES[1]) +" anomalies at " + str(tarlat) + " " + str(tarlon)+ "in" + str(taryear))
+            twin.legend()
+            #twin.title(str(DATAFIELD_NAMES[0]) + " anomalies plot")
+            twin.grid()
+            plt.savefig("images/" + str(DATAFIELD_NAMES[1])+"anom" + str(tarlat) + "." + str(tarlon) +  "." + str(taryear) + ".png")
+            plt.clf()
+    else:
+        #condtion for plotting on altitude, currently only plotting on H2O pressure levels, so will not work for air temperature
+        print("plotting")
+        if int(taryear) == 0:
+            for iter_year in range(2003, 2022):
+                print(iter_year)
+                #a condition here, to program for pressure levels other than H2O can quickly remedy this
+                pressures = np.array([1100, 1000, 925, 850, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50])
+                xcords = []
+                ycords = []
+                magni = []
+                for i in range(0, len(aggr_var_series2[0])):
+                    for j in range(0, len(aggr_var_series2[0,0])):
+                        if aggr_var_series2[iter_year - 2003,i,j] != -9999 and avg_var_series2[i,j] >= 0:
+                            xcords.append(days[i])
+                            ycords.append(pressures[j])
+                            magni.append(aggr_var_series2[iter_year - 2003,i,j] - avg_var_series2[i,j])
+                im = twin.scatter(xcords, ycords, c = magni, s = 10, cmap = "jet", label = str(DATAFIELD_NAMES[1])+" anomaly at" + str(tarlat) + "." + str(tarlon) +  " in " + str(iter_year))
+                #print(magni)
+
+                #twin.ylim(bottom = 0, top = np.mtwin(var_time_series))
+                fig.colorbar(im, ax = twin)
+                #twin.title(str(DATAFIELD_NAMES[0]) + "plot")
+                twin.grid()
+                twin.legend()
+                plt.savefig("images/" + str(DATAFIELD_NAMES[1])+"anom" + str(tarlat) + "." + str(tarlon) +  "." + str(iter_year) + ".png")
+                plt.clf()
+                
+        else:
+            #plotting a single level, probably not required, could be reduced by adding a second condition in the single level plotter
+            twin.plot(days, aggr_var_series2[int(taryear) - 2003] - avg_var_series2, label =   str(DATAFIELD_NAMES[1]) +" anomalies at " + str(tarlat) + " " + str(tarlon)+ "in" + str(taryear))
+            twin.legend()
+            #twin.title(str(DATAFIELD_NAMES[0]) + " anomalies plot")
+            twin.grid()
+            plt.savefig("images/" + str(DATAFIELD_NAMES[1])+"anom" + str(tarlat) + "." + str(tarlon) +  "." + str(taryear) + str(levels) + ".png")
+            plt.clf()"""
+            
 
     
 #target location
@@ -454,10 +666,14 @@ if len(DATAFIELD_NAMES) == 1:
         SinglePlotter(DATAFIELD_NAMES[0], tarlat, tarlon, taryear, levels)
     elif int(plottype) == 1:
         #works well enough, enter 0 in target year to plot anomaly for all the years, doesn't incur any extra processing cost
-        AnoSinglePlotter(DATAFIELD_NAMES[0], tarlat, tarlon, taryear)
+        AnoSinglePlotter(DATAFIELD_NAMES[0], tarlat, tarlon, taryear, levels)
 elif len(DATAFIELD_NAMES) == 2:
     #works I think, only 2 datafields, why would you wanna plot more anyway
-    MultiPlotter(DATAFIELD_NAMES, tarlat, tarlon, taryear)
+    if int(plottype) == 0:
+        MultiPlotter(DATAFIELD_NAMES, tarlat, tarlon, taryear, levels)
+    elif int(plottype) == 1:
+        AnoMultiPlotter(DATAFIELD_NAMES, tarlat, tarlon, taryear, levels)
+    
 
 #To add 
 # anomaly plotter for multiple datafields
